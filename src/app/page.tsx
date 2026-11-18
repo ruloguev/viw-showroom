@@ -247,6 +247,7 @@ export default function ShowroomPage() {
         scenes={ZPYRA_DEMO.scenes}
         onClose={closeUnit}
         onStartTour={startTour}
+        onStatusChange={handleStatusChange}
       />
     </div>
   );
@@ -274,6 +275,7 @@ function UnitsExplorer({
   const availableCount = units.filter(
     (unit) => unit.status === "available",
   ).length;
+  const { units: allUnits } = useZpyraInventory();
   const [hoveredUnitId, setHoveredUnitId] = useState<string | null>(null);
   const [calibrating, setCalibrating] = useState(false);
 
@@ -291,23 +293,49 @@ function UnitsExplorer({
     () =>
       quadrantDefs.map(({ key, points, label }) => {
         const unit =
-          project.units.find(
+          allUnits.find(
             (u) => u.floor === activeFloor && u.quadrant === key,
           ) ?? null;
         const isActive =
           hoveredUnitId !== null && hoveredUnitId === unit?.id;
-        const statusColor =
-          unit?.status === "available"
-            ? "#5CE1E6"
-            : unit?.status === "reserved"
-              ? "#F59E0B"
-              : unit?.status === "sold"
-                ? "#EF4444"
-                : "rgba(238,244,244,0.18)";
+        const isAvailable = unit?.status === "available";
+        const isReserved = unit?.status === "reserved";
+        const isSold = unit?.status === "sold";
+        const stroke = isAvailable
+          ? "#5CE1E6"
+          : isReserved
+            ? "#F59E0B"
+            : isSold
+              ? "#EF4444"
+              : "rgba(238,244,244,0.18)";
+        const fillNormal = isAvailable
+          ? "rgba(92, 225, 230, 0.28)"
+          : isReserved
+            ? "rgba(245, 158, 11, 0.30)"
+            : isSold
+              ? "rgba(239, 68, 68, 0.32)"
+              : "transparent";
+        const fillHover = isAvailable
+          ? "rgba(92, 225, 230, 0.45)"
+          : isReserved
+            ? "rgba(245, 158, 11, 0.48)"
+            : isSold
+              ? "rgba(239, 68, 68, 0.48)"
+              : "transparent";
         const code = unit ? unit.code : `ZP-${activeFloor}${key}`;
-        return { key, points, label, unit, isActive, statusColor, code };
+        return {
+          key,
+          points,
+          label,
+          unit,
+          isActive,
+          stroke,
+          fillNormal,
+          fillHover,
+          code,
+        };
       }),
-    [project.units, activeFloor, hoveredUnitId, quadrantDefs],
+    [allUnits, activeFloor, hoveredUnitId, quadrantDefs],
   );
   const [calibPoints, setCalibPoints] = useState<{ x: number; y: number }[]>([]);
 
@@ -461,21 +489,15 @@ function UnitsExplorer({
                 className="absolute inset-0 z-10 h-full w-full"
                 aria-hidden="true"
               >
-                {quadrantData.map(({ key, points, unit, isActive, statusColor }) => (
+                {quadrantData.map(({ key, points, unit, isActive, stroke, fillNormal, fillHover }) => (
                   <polygon
                     key={key}
                     points={points}
                     strokeLinejoin="round"
                     className="transition-all duration-200"
                     style={{
-                      fill:
-                        unit !== null
-                          ? `${statusColor}${isActive ? "6B" : "38"}`
-                          : "transparent",
-                      stroke:
-                        unit !== null
-                          ? statusColor
-                          : "rgba(238,244,244,0.2)",
+                      fill: unit !== null ? (isActive ? fillHover : fillNormal) : "transparent",
+                      stroke: unit !== null ? stroke : "rgba(238,244,244,0.2)",
                       strokeOpacity: isActive ? 1 : 0.85,
                       strokeWidth: 0.5,
                       cursor: unit !== null ? "pointer" : "default",
@@ -488,7 +510,7 @@ function UnitsExplorer({
                 ))}
               </svg>
               <div className="pointer-events-none absolute inset-0 z-20">
-                {quadrantData.map(({ key, label, unit, isActive, code }) => (
+                {quadrantData.map(({ key, label, unit, isActive, code, stroke }) => (
                   <div
                     key={`label-${key}`}
                     className="absolute"
@@ -501,15 +523,11 @@ function UnitsExplorer({
                     <span
                       className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide backdrop-blur-md sm:text-[11px] ${
                         isActive
-                          ? "border-white/40 bg-[#242321]/90 text-white"
-                          : "border-white/20 bg-[#242321]/75 text-white/90"
+                          ? "bg-[#242321]/90 text-white"
+                          : "bg-[#242321]/75 text-white/90"
                       }`}
                       style={{
-                        borderColor: isActive
-                          ? undefined
-                          : unit
-                            ? undefined
-                            : "rgba(238,244,244,0.15)",
+                        borderColor: unit ? stroke : "rgba(238,244,244,0.2)",
                       }}
                     >
                       {code}

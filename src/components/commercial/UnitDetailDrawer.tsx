@@ -30,6 +30,7 @@ interface UnitDetailDrawerProps {
   scenes: Scene360[];
   onClose: () => void;
   onStartTour: (sceneId: string) => void;
+  onStatusChange?: (unitId: string, status: UnitStatus) => void;
 }
 
 const STATUS_META: Record<
@@ -60,6 +61,7 @@ export default function UnitDetailDrawer({
   scenes,
   onClose,
   onStartTour,
+  onStatusChange,
 }: UnitDetailDrawerProps) {
   const [qrOpen, setQrOpen] = useState(false);
 
@@ -311,6 +313,47 @@ export default function UnitDetailDrawer({
               </div>
               <ArrowUpRight className="mr-2 h-4 w-4 shrink-0 text-white/30 transition-colors group-hover:text-viw-accent" />
             </button>
+
+            <div className="mt-4 rounded-xl border border-viw-text/[0.08] bg-viw-text/[0.025] p-2.5">
+              <p className="mb-1.5 text-[8px] font-medium uppercase tracking-[0.14em] text-viw-text/35">
+                Simular estatus (Demo)
+              </p>
+              <div className="grid grid-cols-3 gap-1">
+                {(
+                  [
+                    { id: "available" as UnitStatus, label: "Disponible", color: "#5CE1E6" },
+                    { id: "reserved" as UnitStatus, label: "Reservado", color: "#F59E0B" },
+                    { id: "sold" as UnitStatus, label: "Vendido", color: "#EF4444" },
+                  ]
+                ).map((option) => {
+                  const isActive = unit.status === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => onStatusChange?.(unit.id, option.id)}
+                      aria-pressed={isActive}
+                      className={`flex h-7 items-center justify-center gap-1 rounded-[9px] border text-[8px] font-medium transition-all ${
+                        isActive
+                          ? "border-transparent text-[#142426]"
+                          : "border-viw-text/10 text-viw-text/40 hover:bg-viw-text/[0.05] hover:text-viw-text/70"
+                      }`}
+                      style={
+                        isActive
+                          ? { backgroundColor: option.color }
+                          : undefined
+                      }
+                    >
+                      <span
+                        className="h-1 w-1 rounded-full"
+                        style={{ backgroundColor: isActive ? "#142426" : option.color }}
+                      />
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <p className="mt-4 text-center text-[8px] leading-relaxed text-white/22">
               Precios en USD. Disponibilidad y acabados sujetos a cambio sin
