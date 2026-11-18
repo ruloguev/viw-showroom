@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import { useZpyraInventory } from "@/context/InventoryContext";
 import LiveInventoryModal from "@/components/commercial/LiveInventoryModal";
 import LaunchYourProjectModal from "@/components/commercial/LaunchYourProjectModal";
 import UnitDetailDrawer from "@/components/commercial/UnitDetailDrawer";
@@ -31,8 +32,6 @@ import type {
   UnitStatus,
 } from "@/types/viw.types";
 
-const STORAGE_KEY = "viw:zpyra:inventory";
-
 const Panorama360VR = dynamic(
   () => import("@/components/viewer/Panorama360VR"),
   {
@@ -45,7 +44,7 @@ export default function ShowroomPage() {
   const [view, setView] = useState<ShowroomView>("aerial");
   const [filter, setFilter] = useState<UnitFilter>("all");
   const [query, setQuery] = useState("");
-  const [units, setUnits] = useState<Unit[]>(ZPYRA_DEMO.units);
+  const { units, setUnitStatus, setUnitPrice, resetInventory } = useZpyraInventory();
   const [activeUnitCode, setActiveUnitCode] = useState<string | null>(null);
   const [activeSceneId, setActiveSceneId] = useState(
     ZPYRA_DEMO.scenes[0].id,
@@ -84,24 +83,6 @@ export default function ShowroomPage() {
         setView("tower");
         setShowLobby(false);
       }
-    }
-
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-
-      const statuses = JSON.parse(stored) as Record<string, UnitStatus>;
-      const validStatuses: UnitStatus[] = ["available", "reserved", "sold"];
-      setUnits((current) =>
-        current.map((unit) => {
-          const storedStatus = statuses[unit.id];
-          return validStatuses.includes(storedStatus)
-            ? { ...unit, status: storedStatus }
-            : unit;
-        }),
-      );
-    } catch {
-      // The live demo remains fully functional without persisted state.
     }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -167,32 +148,14 @@ export default function ShowroomPage() {
 
   const handleStatusChange = useCallback(
     (unitId: string, status: UnitStatus) => {
-      setUnits((current) => {
-        const next = current.map((unit) =>
-          unit.id === unitId ? { ...unit, status } : unit,
-        );
-        try {
-          const statuses = Object.fromEntries(
-            next.map((unit) => [unit.id, unit.status]),
-          );
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses));
-        } catch {
-          // Ignore storage restrictions in private browsing.
-        }
-        return next;
-      });
+      setUnitStatus(unitId, status);
     },
-    [],
+    [setUnitStatus],
   );
 
-  const resetInventory = useCallback(() => {
-    setUnits(ZPYRA_DEMO.units);
-    try {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore storage restrictions in private browsing.
-    }
-  }, []);
+  const resetInventoryCallback = useCallback(() => {
+    resetInventory();
+  }, [resetInventory]);
 
   if (showLobby) {
     return <ShowroomLobby onEnter={handleLobbyEnter} />;
@@ -268,7 +231,8 @@ export default function ShowroomPage() {
       <LiveInventoryModal
         units={units}
         onStatusChange={handleStatusChange}
-        onReset={resetInventory}
+        onPriceChange={setUnitPrice}
+        onReset={resetInventoryCallback}
         forceOpen={adminOpenRequest}
       />
       <LaunchYourProjectModal

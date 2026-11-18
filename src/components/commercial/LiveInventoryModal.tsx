@@ -9,12 +9,13 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { formatUSD } from "@/lib/utils";
+
 import type { Unit, UnitStatus } from "@/types/viw.types";
 
 interface LiveInventoryModalProps {
   units: Unit[];
   onStatusChange: (unitId: string, status: UnitStatus) => void;
+  onPriceChange?: (unitId: string, priceUsd: number) => void;
   onReset: () => void;
   forceOpen?: number;
 }
@@ -51,10 +52,20 @@ const STATUS_OPTIONS: {
 export default function LiveInventoryModal({
   units,
   onStatusChange,
+  onPriceChange,
   onReset,
   forceOpen,
 }: LiveInventoryModalProps) {
   const [open, setOpen] = useState(false);
+  const [levelFilter, setLevelFilter] = useState<number | null>(null);
+
+  const filteredUnits = useMemo(
+    () =>
+      levelFilter === null
+        ? units
+        : units.filter((unit) => unit.floor === levelFilter),
+    [units, levelFilter],
+  );
 
   const counts = useMemo(
     () => ({
@@ -165,8 +176,35 @@ export default function LiveInventoryModal({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4">
+              <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setLevelFilter(null)}
+                  className={`rounded-full border px-2.5 py-1 text-[8px] font-medium uppercase tracking-[0.12em] transition-all ${
+                    levelFilter === null
+                      ? "border-viw-accent/40 bg-viw-accent/15 text-viw-accent"
+                      : "border-viw-text/10 text-viw-text/40 hover:text-viw-text/70"
+                  }`}
+                >
+                  Todos
+                </button>
+                {[14, 15, 16, 17].map((floor) => (
+                  <button
+                    key={floor}
+                    type="button"
+                    onClick={() => setLevelFilter(floor)}
+                    className={`rounded-full border px-2.5 py-1 text-[8px] font-medium uppercase tracking-[0.12em] transition-all ${
+                      levelFilter === floor
+                        ? "border-viw-accent/40 bg-viw-accent/15 text-viw-accent"
+                        : "border-viw-text/10 text-viw-text/40 hover:text-viw-text/70"
+                    }`}
+                  >
+                    Nivel {floor}
+                  </button>
+                ))}
+              </div>
               <div className="flex flex-col gap-1.5">
-                {units.map((unit) => (
+                {filteredUnits.map((unit) => (
                   <div
                     key={unit.id}
                     className="flex flex-col gap-2.5 rounded-[14px] border border-viw-text/[0.08] bg-viw-text/[0.025] p-3 transition-colors hover:bg-viw-text/[0.04] sm:flex-row sm:items-center sm:gap-3"
@@ -194,9 +232,22 @@ export default function LiveInventoryModal({
                             )?.label ?? unit.status}
                           </span>
                         </div>
-                        <p className="mt-0.5 truncate text-[9px] text-viw-text/30">
-                          {unit.name} · {formatUSD(unit.priceUsd)}
-                        </p>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-viw-text/30">
+                          <span className="truncate">{unit.name}</span>
+                          <span>·</span>
+                          <input
+                            type="number"
+                            defaultValue={unit.priceUsd}
+                            onBlur={(event) => {
+                              const value = Number(event.target.value);
+                              if (Number.isFinite(value) && value > 0) {
+                                onPriceChange?.(unit.id, value);
+                              }
+                            }}
+                            className="w-[74px] rounded border border-viw-text/10 bg-black/20 px-1 py-0.5 text-[9px] text-viw-text/60 outline-none focus:border-viw-accent/40"
+                            aria-label={`Precio de ${unit.code}`}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -241,7 +292,7 @@ export default function LiveInventoryModal({
                   className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-viw-text/10 px-3 text-[8px] font-medium text-viw-text/35 transition-colors hover:border-viw-text/20 hover:text-viw-text/65 sm:flex-none"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Restablecer demo
+                  Restaurar demo
                 </button>
                 <button
                   type="button"
