@@ -144,12 +144,19 @@ export default function ShowroomLobby({ onEnter }: ShowroomLobbyProps) {
       }`}
       aria-label="Inicio viw"
     >
-      <div className="absolute inset-0">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url(/assets/pano-1.webp)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <Canvas
           camera={{ position: [0, 0, 0], fov: 78, near: 0.1, far: 100 }}
-          dpr={[1, 1.75]}
+          dpr={[1, 1.5]}
           flat
-          gl={{ antialias: true, powerPreference: "high-performance" }}
+          gl={{ antialias: false, powerPreference: "high-performance" }}
           onCreated={({ gl }) => gl.setClearColor("#171815", 1)}
         >
           <color attach="background" args={["#171815"]} />

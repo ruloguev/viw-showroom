@@ -312,6 +312,39 @@ function UnitsExplorer({
   ).length;
   const [hoveredUnitId, setHoveredUnitId] = useState<string | null>(null);
   const [calibrating, setCalibrating] = useState(false);
+
+  const quadrantDefs = useMemo(
+    () => [
+      { key: "N" as const, points: "23,26  43,14  49.5,50  29,62", label: { x: 36, y: 38 } },
+      { key: "E" as const, points: "43,14  62,4  69,39  49.5,50", label: { x: 56, y: 27 } },
+      { key: "S" as const, points: "29,62  49.5,50  56,87  36,93", label: { x: 43, y: 73 } },
+      { key: "W" as const, points: "49.5,50  69,39  75,75  56,87", label: { x: 62, y: 63 } },
+    ],
+    [],
+  );
+
+  const quadrantData = useMemo(
+    () =>
+      quadrantDefs.map(({ key, points, label }) => {
+        const unit =
+          project.units.find(
+            (u) => u.floor === activeFloor && u.quadrant === key,
+          ) ?? null;
+        const isActive =
+          hoveredUnitId !== null && hoveredUnitId === unit?.id;
+        const statusColor =
+          unit?.status === "available"
+            ? "#5CE1E6"
+            : unit?.status === "reserved"
+              ? "#F59E0B"
+              : unit?.status === "sold"
+                ? "#EF4444"
+                : "rgba(238,244,244,0.18)";
+        const code = unit ? unit.code : `ZP-${activeFloor}${key}`;
+        return { key, points, label, unit, isActive, statusColor, code };
+      }),
+    [project.units, activeFloor, hoveredUnitId, quadrantDefs],
+  );
   const [calibPoints, setCalibPoints] = useState<{ x: number; y: number }[]>([]);
 
   useEffect(() => {
@@ -456,120 +489,70 @@ function UnitsExplorer({
                 alt="Planta tipo de Zpyra: cuatro residencias alrededor del núcleo central"
                 fill
                 sizes="(max-width: 1024px) 100vw, 55vw"
-                className="object-cover w-full h-full"
+                className="z-0 object-cover w-full h-full"
               />
               <svg
                 viewBox="0 0 100 100"
                 preserveAspectRatio="none"
-                className="absolute inset-0 w-full h-full z-10"
+                className="absolute inset-0 z-10 h-full w-full"
                 aria-hidden="true"
               >
-                {(() => {
-                  const quadrants: {
-                    key: "N" | "E" | "S" | "W";
-                    points: string;
-                    label: { x: number; y: number };
-                  }[] = [
-                    {
-                      key: "N",
-                      points: "23,26  43,14  49.5,50  29,62",
-                      label: { x: 36, y: 38 },
-                    },
-                    {
-                      key: "E",
-                      points: "43,14  62,4  69,39  49.5,50",
-                      label: { x: 56, y: 27 },
-                    },
-                    {
-                      key: "S",
-                      points: "29,62  49.5,50  56,87  36,93",
-                      label: { x: 43, y: 73 },
-                    },
-                    {
-                      key: "W",
-                      points: "49.5,50  69,39  75,75  56,87",
-                      label: { x: 62, y: 63 },
-                    },
-                  ];
-                  return quadrants.map(({ key, points, label }) => {
-                    const unit =
-                      project.units.find(
-                        (u) =>
-                          u.floor === activeFloor && u.quadrant === key,
-                      ) ?? null;
-                    const isActive =
-                      hoveredUnitId !== null && hoveredUnitId === unit?.id;
-                    const statusColor =
-                      unit?.status === "available"
-                        ? "#5CE1E6"
-                        : unit?.status === "reserved"
-                          ? "#F59E0B"
-                          : unit?.status === "sold"
-                            ? "#EF4444"
-                            : "rgba(238,244,244,0.18)";
-                    const code = unit ? unit.code : `ZP-${activeFloor}${key}`;
-                    return (
-                      <g key={key}>
-                        <polygon
-                          points={points}
-                          strokeLinejoin="round"
-                          className="transition-all duration-200"
-                          style={{
-                            fill:
-                              unit !== null
-                                ? `${statusColor}${isActive ? "6B" : "38"}`
-                                : "transparent",
-                            stroke:
-                              unit !== null
-                                ? statusColor
-                                : "rgba(238,244,244,0.2)",
-                            strokeOpacity: isActive ? 1 : 0.85,
-                            strokeWidth: 0.5,
-                            cursor: unit !== null ? "pointer" : "default",
-                            pointerEvents: "auto",
-                          }}
-                          onMouseEnter={() =>
-                            unit && setHoveredUnitId(unit.id)
-                          }
-                          onMouseLeave={() => setHoveredUnitId(null)}
-                          onClick={() => unit && onOpenUnit(unit)}
-                        />
-                        <g
-                          style={{ pointerEvents: "none" }}
-                          transform={`translate(${label.x}, ${label.y})`}
-                        >
-                          <rect
-                            x={-13}
-                            y={-3}
-                            width={26}
-                            height={6}
-                            rx={3}
-                            fill="rgba(36,35,33,0.78)"
-                            stroke="rgba(238,244,244,0.3)"
-                            strokeWidth={0.3}
-                          />
-                          <text
-                            x={0}
-                            y={1.2}
-                            textAnchor="middle"
-                            fill={
-                              isActive
-                                ? "#FFFFFF"
-                                : "rgba(238,244,244,0.92)"
-                            }
-                            fontFamily="var(--font-poppins)"
-                            fontSize={2.2}
-                            fontWeight={600}
-                            letterSpacing="0.15"
-                          >
-                            {code}
-                          </text>
-                        </g>
-                      </g>
-                    );
-                  });
-                })()}
+                {quadrantData.map(({ key, points, unit, isActive, statusColor }) => (
+                  <polygon
+                    key={key}
+                    points={points}
+                    strokeLinejoin="round"
+                    className="transition-all duration-200"
+                    style={{
+                      fill:
+                        unit !== null
+                          ? `${statusColor}${isActive ? "6B" : "38"}`
+                          : "transparent",
+                      stroke:
+                        unit !== null
+                          ? statusColor
+                          : "rgba(238,244,244,0.2)",
+                      strokeOpacity: isActive ? 1 : 0.85,
+                      strokeWidth: 0.5,
+                      cursor: unit !== null ? "pointer" : "default",
+                      pointerEvents: "auto",
+                    }}
+                    onMouseEnter={() => unit && setHoveredUnitId(unit.id)}
+                    onMouseLeave={() => setHoveredUnitId(null)}
+                    onClick={() => unit && onOpenUnit(unit)}
+                  />
+                ))}
               </svg>
+              <div className="pointer-events-none absolute inset-0 z-20">
+                {quadrantData.map(({ key, label, unit, isActive, code }) => (
+                  <div
+                    key={`label-${key}`}
+                    className="absolute"
+                    style={{
+                      left: `${label.x}%`,
+                      top: `${label.y}%`,
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  >
+                    <span
+                      className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide backdrop-blur-md sm:text-[11px] ${
+                        isActive
+                          ? "border-white/40 bg-[#242321]/90 text-white"
+                          : "border-white/20 bg-[#242321]/75 text-white/90"
+                      }`}
+                      style={{
+                        borderColor: isActive
+                          ? undefined
+                          : unit
+                            ? undefined
+                            : "rgba(238,244,244,0.15)",
+                      }}
+                    >
+                      {code}
+                    </span>
+                  </div>
+                ))}
+              </div>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1b1c18]/70 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#242321]/50" />
               <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full border border-white/12 bg-black/25 px-2.5 py-1.5 text-[7px] font-medium uppercase tracking-[0.16em] text-white/60 backdrop-blur-md">
                 <Layers className="h-2.5 w-2.5 stroke-[1.4] text-viw-accent/85" />
