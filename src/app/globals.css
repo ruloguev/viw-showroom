@@ -1,26 +1,380 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #31302d;
+  --foreground: #eef4f4;
+  --panel: #242321;
+  --panel-soft: rgba(36, 35, 33, 0.66);
+  --border: rgba(238, 244, 244, 0.15);
+  --accent: #5ce1e6;
+  --available: #5ce1e6;
+  --reserved: #f59e0b;
+  --sold: #ef4444;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-viw-base: #31302d;
+  --color-viw-panel: #242321;
+  --color-viw-text: #eef4f4;
+  --color-viw-accent: #5ce1e6;
+  --color-viw-line: rgba(238, 244, 244, 0.15);
+  --color-status-available: #5ce1e6;
+  --color-status-reserved: #f59e0b;
+  --color-status-sold: #ef4444;
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-poppins);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
+  min-height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(92, 225, 230, 0.05), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(217, 182, 126, 0.04), transparent 35%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overscroll-behavior: none;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01" 1, "cv11" 1;
+  text-rendering: optimizeLegibility;
+}
+
+body::after {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+::selection {
+  background: rgba(92, 225, 230, 0.3);
+  color: #ffffff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(238, 244, 244, 0.18) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(238, 244, 244, 0.18);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(92, 225, 230, 0.45);
+}
+
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+[role="button"] {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@layer components {
+  .viw-glass {
+    border: 1px solid rgba(238, 244, 244, 0.15);
+    background: rgba(36, 35, 33, 0.75);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  .viw-glass-soft {
+    border: 1px solid rgba(238, 244, 244, 0.12);
+    background: rgba(36, 35, 33, 0.55);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+
+  .viw-hairline {
+    border-color: rgba(238, 244, 244, 0.15);
+  }
+
+  .viw-eyebrow {
+    font-size: 0.625rem;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(238, 244, 244, 0.52);
+  }
+
+  .viw-heading {
+    font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+
+  .viw-rule {
+    height: 1px;
+    width: 100%;
+    background: rgba(238, 244, 244, 0.12);
+  }
+
+  .viw-inset {
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.bg-viw-grid {
+  background-image:
+    linear-gradient(rgba(238, 244, 244, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 244, 244, 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.bg-viw-grid-dense {
+  background-image:
+    linear-gradient(rgba(238, 244, 244, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 244, 244, 0.045) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.stage-vignette {
+  background:
+    linear-gradient(180deg, rgba(19, 19, 17, 0.48) 0%, transparent 24%, transparent 58%, rgba(19, 19, 17, 0.74) 100%),
+    linear-gradient(90deg, rgba(19, 19, 17, 0.42) 0%, transparent 28%, transparent 78%, rgba(19, 19, 17, 0.28) 100%);
+}
+
+.text-shadow-soft {
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.35);
+}
+
+.pb-safe {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+}
+
+@keyframes viwViewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes viwPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes viwDrawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes viwFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes viwModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes viwPinPulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.65;
+  }
+  75%,
+  100% {
+    transform: scale(2.15);
+    opacity: 0;
+  }
+}
+
+@keyframes viwSoftPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes viwFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes viwSlowZoom {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.075);
+  }
+}
+
+@keyframes viwScan {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes viwSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-view-enter {
+  animation: viwViewEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-panel-in {
+  animation: viwPanelIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-drawer-in {
+  animation: viwDrawerIn 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: viwFadeIn 0.25s ease-out both;
+}
+
+.animate-modal-in {
+  animation: viwModalIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-slow-zoom {
+  animation: viwSlowZoom 22s ease-in-out infinite alternate;
+}
+
+.animate-float {
+  animation: viwFloat 5s ease-in-out infinite;
+}
+
+.animate-soft-pulse {
+  animation: viwSoftPulse 2.8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: viwSpin 24s linear infinite;
+}
+
+.pin-pulse::before,
+.pin-pulse::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(92, 225, 230, 0.55);
+  border-radius: 999px;
+  content: "";
+  animation: viwPinPulse 2.8s ease-out infinite;
+}
+
+.pin-pulse::after {
+  animation-delay: 1.35s;
+}
+
+.unit-polygon {
+  transition:
+    fill 220ms ease,
+    stroke 220ms ease,
+    opacity 220ms ease;
+}
+
+@keyframes viwRouteLine {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+.route-line {
+  animation: viwRouteLine 14s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
