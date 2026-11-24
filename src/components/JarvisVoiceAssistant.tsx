@@ -197,7 +197,7 @@ export default function JarvisVoiceAssistant({
           : "Asistente viw";
 
   return (
-    <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6 md:right-6">
+    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
       {showManual ? (
         <form
           onSubmit={handleManualSubmit}
@@ -228,14 +228,17 @@ export default function JarvisVoiceAssistant({
         type="button"
         onClick={handleToggle}
         disabled={status === "thinking" || status === "speaking"}
-        className={`flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-all ${
+        className={`relative flex h-12 w-12 items-center justify-center rounded-full border backdrop-blur-md transition-all ${
           status === "listening"
-            ? "border-[#5CE1E6] bg-[#5CE1E6]/20 text-[#5CE1E6] shadow-[0_0_24px_rgba(92,225,230,0.4)]"
-            : "border-[#EEF4F4]/15 bg-[#242321]/75 text-[#EEF4F4]/80 hover:border-[#5CE1E6]/40 hover:text-[#5CE1E6]"
+            ? "border-[#5CE1E6] bg-[#5CE1E6]/20 text-[#5CE1E6] shadow-[0_0_32px_rgba(92,225,230,0.55)]"
+            : "border-[#5CE1E6]/40 bg-[#242321]/80 text-[#5CE1E6] shadow-[0_0_20px_rgba(92,225,230,0.25)] hover:bg-[#5CE1E6] hover:text-[#242321]"
         }`}
         aria-label={statusLabel}
         title={statusLabel}
       >
+        {status === "idle" ? (
+          <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-[#5CE1E6]/15" />
+        ) : null}
         <svg
           viewBox="0 0 24 24"
           className="h-5 w-5"
