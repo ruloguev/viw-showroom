@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import dynamic from "next/dynamic";
@@ -22,6 +23,7 @@ import AerialMasterplan from "@/components/viewer/AerialMasterplan";
 import LocationView from "@/components/viewer/LocationView";
 import TowerFacadeViewer from "@/components/viewer/TowerFacadeViewer";
 import ShowroomLobby, { type LobbyTarget } from "@/components/lobby/ShowroomLobby";
+import JarvisVoiceAssistant from "@/components/JarvisVoiceAssistant";
 import { PLATFORM_CONFIG, ZPYRA_DEMO } from "@/data/zpyra-demo";
 import { formatUSD } from "@/lib/utils";
 import type {
@@ -55,6 +57,19 @@ export default function ShowroomPage() {
   const [showLobby, setShowLobby] = useState(true);
   const [adminOpenRequest, setAdminOpenRequest] = useState(0);
   const [launchOpen, setLaunchOpen] = useState(false);
+  const [jarvisFilter, setJarvisFilter] = useState<{
+    recamaras?: number;
+    presupuestoMax?: number;
+    nivel?: number;
+    orientacion?: string;
+  }>({});
+  const [cotizacion, setCotizacion] = useState<{
+    code: string;
+    price: number;
+    enganche: number;
+    plazo: number;
+    mensualidad: number;
+  } | null>(null);
 
   const activeUnit =
     units.find((unit) => unit.code === activeUnitCode) ?? null;
@@ -66,6 +81,33 @@ export default function ShowroomPage() {
         : units,
     [filter, units],
   );
+
+  const displayUnits = useMemo(() => {
+    return filteredUnits.filter((unit) => {
+      if (
+        jarvisFilter.recamaras !== undefined &&
+        unit.bedrooms !== jarvisFilter.recamaras
+      ) {
+        return false;
+      }
+      if (
+        jarvisFilter.presupuestoMax !== undefined &&
+        unit.priceUsd > jarvisFilter.presupuestoMax
+      ) {
+        return false;
+      }
+      if (jarvisFilter.nivel !== undefined && unit.floor !== jarvisFilter.nivel) {
+        return false;
+      }
+      if (
+        jarvisFilter.orientacion !== undefined &&
+        unit.orientation.toLowerCase() !== jarvisFilter.orientacion.toLowerCase()
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [filteredUnits, jarvisFilter]);
 
   // One-time bootstrap from browser-only state: the ?unit= deep link and the
   // persisted live inventory. It intentionally runs after hydration so the
@@ -121,6 +163,70 @@ export default function ShowroomPage() {
     setView(nextView);
     setActiveUnitCode(null);
   }, []);
+
+  const handleJarvisAction = useCallback(
+    (name: string, args: Record<string, any>) => {
+      if (name === "filtrarUnidades") {
+        setJarvisFilter({
+          recamaras:
+            typeof args.recamaras === "number" ? args.recamaras : undefined,
+          presupuestoMax:
+            typeof args.presupuestoMax === "number"
+              ? args.presupuestoMax
+              : undefined,
+          nivel: typeof args.nivel === "number" ? args.nivel : undefined,
+          orientacion:
+            typeof args.orientacion === "string" ? args.orientacion : undefined,
+        });
+        setView("units");
+        return;
+      }
+      if (name === "seleccionarUnidad") {
+        const code = String(args.unidadId ?? "");
+        const match = units.find(
+          (unit) => unit.code.toLowerCase() === code.toLowerCase(),
+        );
+        if (match) {
+          setActiveUnitCode(match.code);
+          setView("tower");
+        }
+        return;
+      }
+      if (name === "calcularCotizacion") {
+        const code = String(args.unidadId ?? "");
+        const match = units.find(
+          (unit) => unit.code.toLowerCase() === code.toLowerCase(),
+        );
+        if (!match) return;
+        const pct =
+          typeof args.porcentajeEnganche === "number"
+            ? args.porcentajeEnganche
+            : 30;
+        const plazo =
+          typeof args.plazoMeses === "number" ? args.plazoMeses : 24;
+        const enganche = match.priceUsd * (pct / 100);
+        const saldo = match.priceUsd - enganche;
+        const mensualidad = saldo / plazo;
+        setCotizacion({
+          code: match.code,
+          price: match.priceUsd,
+          enganche,
+          plazo,
+          mensualidad,
+        });
+        setActiveUnitCode(match.code);
+        return;
+      }
+      if (name === "reiniciarVista") {
+        setJarvisFilter({});
+        setFilter("all");
+        setView("aerial");
+        setCotizacion(null);
+        return;
+      }
+    },
+    [units],
+  );
 
   const handleLobbyEnter = useCallback((target: LobbyTarget) => {
     setShowLobby(false);
@@ -193,7 +299,7 @@ export default function ShowroomPage() {
           {view === "tower" ? (
             <TowerFacadeViewer
               project={ZPYRA_DEMO}
-              units={units}
+              units={displayUnits}
               filter={filter}
               onOpenUnit={openUnit}
               onOpenFloorplan={(floor) => {
@@ -206,7 +312,7 @@ export default function ShowroomPage() {
           {view === "units" ? (
             <UnitsExplorer
               project={ZPYRA_DEMO}
-              units={filteredUnits}
+              units={displayUnits}
               filter={filter}
               activeFloor={activeFloor}
               onActiveFloorChange={setActiveFloor}
@@ -239,6 +345,50 @@ export default function ShowroomPage() {
         open={launchOpen}
         onClose={() => setLaunchOpen(false)}
       />
+      <JarvisVoiceAssistant
+        inventoryContext={units}
+        onExecuteAction={handleJarvisAction}
+      />
+      {cotizacion ? (
+        <div className="viw-glass fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[360px] -translate-x-1/2 rounded-2xl p-4 animate-panel-in md:bottom-6 md:left-6 md:translate-x-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className="viw-eyebrow">Corrida financiera · {cotizacion.code}</p>
+            <button
+              type="button"
+              onClick={() => setCotizacion(null)}
+              className="text-viw-text/40 hover:text-viw-text"
+            >
+              ×
+            </button>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+            <div>
+              <p className="text-viw-text/35">Precio</p>
+              <p className="font-display text-[14px] font-medium text-viw-text">
+                ${cotizacion.price.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-viw-text/35">Enganche</p>
+              <p className="font-display text-[14px] font-medium text-viw-text">
+                ${cotizacion.enganche.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-viw-text/35">Plazo</p>
+              <p className="font-display text-[14px] font-medium text-viw-text">
+                {cotizacion.plazo} meses
+              </p>
+            </div>
+            <div>
+              <p className="text-viw-text/35">Mensualidad</p>
+              <p className="font-display text-[14px] font-medium text-viw-accent">
+                ${cotizacion.mensualidad.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <UnitDetailDrawer
         unit={activeUnit}
