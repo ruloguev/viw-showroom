@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { NextResponse } from "next/server";
 
-const MODEL = "gemini-2.5-flash";
+const MODELS = ["gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"];
 
 const tools = [
   {
@@ -96,15 +96,41 @@ export async function POST(request: Request) {
       },
     ];
 
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: contents as any,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        tools: tools as any,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    });
+    let response: any = null;
+    let lastError: any = null;
+    for (const model of MODELS) {
+      try {
+        response = await ai.models.generateContent({
+          model,
+          contents: contents as any,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            tools: tools as any,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        });
+        break;
+      } catch (err: any) {
+        lastError = err;
+        // retry without thinkingConfig in case the model doesn't support it
+        try {
+          response = await ai.models.generateContent({
+            model,
+            contents: contents as any,
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+              tools: tools as any,
+            },
+          });
+          break;
+        } catch (err2: any) {
+          lastError = err2;
+        }
+      }
+    }
+    if (!response) {
+      throw lastError ?? new Error("No model available");
+    }
 
     const candidate = response.candidates?.[0];
     const parts = candidate?.content?.parts ?? [];
