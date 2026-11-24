@@ -46,6 +46,7 @@ export default function JarvisVoiceAssistant({
   const [showManual, setShowManual] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const statusRef = useRef<JarvisStatus>("idle");
+  const transcriptRef = useRef("");
 
   useEffect(() => {
     statusRef.current = status;
@@ -73,12 +74,22 @@ export default function JarvisVoiceAssistant({
       if (!text.trim()) return;
       setStatus("thinking");
       try {
+        const compact = Array.isArray(inventoryContext)
+          ? inventoryContext.map((u: any) => ({
+              code: u.code,
+              status: u.status,
+              bedrooms: u.bedrooms,
+              priceUsd: u.priceUsd,
+              floor: u.floor,
+              orientation: u.orientation,
+            }))
+          : inventoryContext;
         const response = await fetch("/api/jarvis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             transcript: text,
-            inventoryContext,
+            inventoryContext: compact,
           }),
         });
         const data = await response.json();
@@ -123,6 +134,7 @@ export default function JarvisVoiceAssistant({
           finalText += result[0].transcript;
         }
       }
+      transcriptRef.current = finalText;
       setTranscript(finalText);
     };
     recognition.onerror = () => {
@@ -130,18 +142,20 @@ export default function JarvisVoiceAssistant({
       setShowManual(true);
     };
     recognition.onend = () => {
-      const final = transcript;
+      const final = transcriptRef.current;
       if (final.trim()) {
         sendTranscript(final);
       } else {
         setStatus("idle");
       }
+      transcriptRef.current = "";
     };
     recognitionRef.current = recognition;
     setTranscript("");
+    transcriptRef.current = "";
     setStatus("listening");
     recognition.start();
-  }, [sendTranscript, transcript]);
+  }, [sendTranscript]);
 
   const stopListening = useCallback(() => {
     try {
