@@ -350,7 +350,7 @@ export default function ShowroomPage() {
         onExecuteAction={handleJarvisAction}
       />
       {cotizacion ? (
-        <div className="viw-glass fixed bottom-24 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[360px] -translate-x-1/2 rounded-2xl p-4 animate-panel-in md:bottom-6 md:left-6 md:translate-x-0">
+        <div className="viw-glass fixed left-1/2 top-24 z-[85] w-[calc(100%-2rem)] max-w-[440px] -translate-x-1/2 rounded-2xl p-5 animate-panel-in shadow-2xl md:top-28">
           <div className="flex items-start justify-between gap-2">
             <p className="viw-eyebrow">Corrida financiera · {cotizacion.code}</p>
             <button
@@ -361,28 +361,28 @@ export default function ShowroomPage() {
               ×
             </button>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+          <div className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
             <div>
               <p className="text-viw-text/35">Precio</p>
-              <p className="font-display text-[14px] font-medium text-viw-text">
+              <p className="font-display text-[16px] font-medium text-viw-text">
                 ${cotizacion.price.toLocaleString("en-US")}
               </p>
             </div>
             <div>
               <p className="text-viw-text/35">Enganche</p>
-              <p className="font-display text-[14px] font-medium text-viw-text">
+              <p className="font-display text-[16px] font-medium text-viw-text">
                 ${cotizacion.enganche.toLocaleString("en-US")}
               </p>
             </div>
             <div>
               <p className="text-viw-text/35">Plazo</p>
-              <p className="font-display text-[14px] font-medium text-viw-text">
+              <p className="font-display text-[16px] font-medium text-viw-text">
                 {cotizacion.plazo} meses
               </p>
             </div>
             <div>
               <p className="text-viw-text/35">Mensualidad</p>
-              <p className="font-display text-[14px] font-medium text-viw-accent">
+              <p className="font-display text-[18px] font-medium text-viw-accent">
                 ${cotizacion.mensualidad.toLocaleString("en-US", { maximumFractionDigits: 0 })}
               </p>
             </div>
