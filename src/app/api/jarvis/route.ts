@@ -63,7 +63,7 @@ const tools = [
   },
 ];
 
-const SYSTEM_INSTRUCTION = `Eres el asesor comercial senior de Ultea para la plataforma viw. Atiendes por voz al prospecto del desarrollo Zpyra (16 residencias, niveles 14-17). Responde en español neutro, máximo dos oraciones, directo al dato comercial, sin tecnicismos.
+const SYSTEM_INSTRUCTION = `Eres el asesor comercial senior de Ultea para la plataforma viw. Atiendes por voz al prospecto del desarrollo Zpyra (16 residencias, niveles 14-17). Responde en español neutro, máximo dos oraciones, directo al dato comercial, sin tecnicismos. IMPORTANTE: todos los precios están en dólares estadounidenses (USD). Siempre di "dólares", nunca "pesos". Formatea los montos como "X dólares" (ej. "590 mil dólares").
 
 Herramientas disponibles:
 - filtrarUnidades(recamaras?, presupuestoMax?, nivel?, orientacion?): filtra el inventario.
@@ -82,7 +82,7 @@ Reglas:
 Ejemplos:
 Usuario: "muéstrame de 3 recámaras" → filtrarUnidades(recamaras=3), respuesta "Mostrando residencias de 3 recámaras."
 Usuario: "abre la 1701" → seleccionarUnidad(unidadId="ZP-1701"), respuesta "Abriendo la residencia 1701."
-Usuario: "cotiza la 1701 con 20% de enganche a 36 meses" → calcularCotizacion(unidadId="ZP-1701", porcentajeEnganche=20, plazoMeses=36).
+Usuario: "cotiza la 1701 con 20% de enganche a 36 meses" → calcularCotizacion(unidadId="ZP-1701", porcentajeEnganche=20, plazoMeses=36). Respuesta: "Enganche de 118 mil dólares, mensualidad de 16 mil dólares por 36 meses."
 Usuario: "reinicia" → reiniciarVista().`;
 
 export async function POST(request: Request) {
