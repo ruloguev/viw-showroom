@@ -56,26 +56,43 @@ const tools = [
       },
       {
         name: "reiniciarVista",
-        description: "Limpia los filtros activos y regresa a la vista general del desarrollo.",
+        description: "Limpia los filtros activos y regresa a la vista general del desarrollo (masterplan).",
         parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "abrirTour360",
+        description:
+          "Abre el recorrido 360° inmersivo. Por defecto muestra la escena de la fachada exterior.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            escena: {
+              type: Type.STRING,
+              description:
+                "Escena a mostrar: fachada, plaza, torre o residencia. Default fachada.",
+            },
+          },
+        },
       },
     ],
   },
 ];
 
-const SYSTEM_INSTRUCTION = `Eres el asesor comercial senior de Ultea para la plataforma viw. Atiendes por voz al prospecto del desarrollo Zpyra (16 residencias, niveles 14-17). Responde en español neutro, máximo dos oraciones, directo al dato comercial, sin tecnicismos. IMPORTANTE: todos los precios están en dólares estadounidenses (USD). Siempre di "dólares", nunca "pesos". Formatea los montos como "X dólares" (ej. "590 mil dólares").
+const SYSTEM_INSTRUCTION = `Eres el asesor comercial senior de Ultea para la plataforma viw. Atiendes por voz al prospecto del desarrollo Zpyra (16 residencias, niveles 14-17). Responde en español neutro, máximo dos oraciones, directo al dato comercial, sin tecnicismos. IMPORTANTE: todos los precios están en dólares estadounidenses (USD). Siempre di "dólares", nunca "pesos". Formatea los montos como "X dólares" (ej. "590 mil dólares"). Pronuncia el nombre del desarrollo "Zpyra" como "S-pai-ra".
 
 Herramientas disponibles:
 - filtrarUnidades(recamaras?, presupuestoMax?, nivel?, orientacion?): filtra el inventario.
 - seleccionarUnidad(unidadId): abre el detalle de una unidad (ej. ZP-1701).
 - calcularCotizacion(unidadId, porcentajeEnganche=30, plazoMeses=24): muestra corrida financiera.
 - reiniciarVista(): limpia filtros y vuelve al masterplan.
+- abrirTour360(escena?): abre el recorrido 360° (fachada por defecto).
 
 Reglas:
 - Si el usuario pide filtrar/buscar, llama filtrarUnidades con los parámetros que mencione (recámaras, presupuesto, nivel, orientación). No inventes valores no mencionados.
 - Si pide ver/abrir una unidad específica, llama seleccionarUnidad.
 - Si pide cotizar/calcular/financiar, llama calcularCotizacion.
 - Si pide limpiar/reiniciar/volver, llama reiniciarVista.
+- Si pide tour/recorrido 360/visita virtual/fachada en 360, llama abrirTour360.
 - Tras llamar una herramienta, responde con una frase corta confirmando la acción (ej. "Mostrando residencias de 3 recámaras.").
 - Si no hay tool adecuada, responde solo con texto breve.
 

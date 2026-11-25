@@ -54,7 +54,8 @@ export default function JarvisVoiceAssistant({
 
   const speak = useCallback((text: string) => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
-    const utterance = new SpeechSynthesisUtterance(text);
+    const spokenText = text.replace(/Zpyra/gi, "S pai ra");
+    const utterance = new SpeechSynthesisUtterance(spokenText);
     const voices = window.speechSynthesis.getVoices();
     const preferred =
       voices.find((v) => v.lang === "es-MX") ||

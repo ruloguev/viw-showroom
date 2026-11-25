@@ -178,6 +178,7 @@ export default function ShowroomPage() {
           orientacion:
             typeof args.orientacion === "string" ? args.orientacion : undefined,
         });
+        setFilter("available");
         setView("units");
         return;
       }
@@ -215,6 +216,19 @@ export default function ShowroomPage() {
           mensualidad,
         });
         setActiveUnitCode(match.code);
+        return;
+      }
+      if (name === "abrirTour360") {
+        const escena = String(args.escena ?? "fachada").toLowerCase();
+        const sceneMap: Record<string, string> = {
+          fachada: "pano-fachada",
+          plaza: "pano-plaza",
+          torre: "pano-torre",
+          residencia: "pano-residencia",
+        };
+        const sceneId = sceneMap[escena] ?? "pano-fachada";
+        setActiveSceneId(sceneId);
+        setView("tour");
         return;
       }
       if (name === "reiniciarVista") {
