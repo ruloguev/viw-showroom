@@ -331,6 +331,11 @@ export default function ShowroomPage() {
               activeFloor={activeFloor}
               onActiveFloorChange={setActiveFloor}
               onOpenUnit={openUnit}
+              jarvisFilter={jarvisFilter}
+              onClearJarvisFilter={() => {
+                setJarvisFilter({});
+                setFilter("all");
+              }}
             />
           ) : null}
 
@@ -424,6 +429,8 @@ function UnitsExplorer({
   activeFloor,
   onActiveFloorChange,
   onOpenUnit,
+  jarvisFilter,
+  onClearJarvisFilter,
 }: {
   project: ProjectData;
   units: Unit[];
@@ -431,6 +438,13 @@ function UnitsExplorer({
   activeFloor: number;
   onActiveFloorChange: (floor: number) => void;
   onOpenUnit: (unit: Unit) => void;
+  jarvisFilter?: {
+    recamaras?: number;
+    presupuestoMax?: number;
+    nivel?: number;
+    orientacion?: string;
+  };
+  onClearJarvisFilter?: () => void;
 }) {
   const sortedUnits = useMemo(
     () => [...units].sort((a, b) => b.floor - a.floor),
@@ -769,6 +783,19 @@ function UnitsExplorer({
               <span className="rounded-full border border-viw-text/10 px-1.5 py-0.5 text-[8px] tabular-nums text-viw-text/30">
                 {sortedUnits.length.toString().padStart(2, "0")}
               </span>
+              {jarvisFilter &&
+              (jarvisFilter.recamaras ||
+                jarvisFilter.presupuestoMax ||
+                jarvisFilter.nivel ||
+                jarvisFilter.orientacion) ? (
+                <button
+                  type="button"
+                  onClick={() => onClearJarvisFilter?.()}
+                  className="flex items-center gap-1 rounded-full border border-viw-accent/30 bg-viw-accent/10 px-2 py-0.5 text-[8px] font-medium uppercase tracking-[0.1em] text-viw-accent transition-colors hover:bg-viw-accent/20"
+                >
+                  Limpiar filtros de voz ✕
+                </button>
+              ) : null}
             </div>
             <p className="hidden items-center gap-1.5 text-[8px] uppercase tracking-[0.1em] text-viw-text/20 sm:flex">
               <Building2 className="h-3 w-3" />
