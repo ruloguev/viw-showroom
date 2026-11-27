@@ -198,7 +198,7 @@ export default function JarvisVoiceAssistant({
           : "Asistente viw";
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
+    <div className="fixed bottom-24 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2 md:bottom-6">
       {showManual ? (
         <form
           onSubmit={handleManualSubmit}
